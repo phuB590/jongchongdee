@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ร้านจงชงดี เจ็ดยอด — สมุดบัญชี</title>
+<title>ร้านจงชงดี — สมุดบัญชี</title>
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="theme-color" content="#6f4e37">
+<meta name="theme-color" content="#e53935">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
   :root{
-    --brown:#c62828; --brown2:#8a5a3b; --cream:#f7f1e8; --card:#ffffff;
+    --brown:#e53935; --brown2:#b71c1c; --cream:#f7f1e8; --card:#ffffff;
     --green:#2e7d32; --red:#c62828; --blue:#1565c0; --amber:#b26a00;
     --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
   }
@@ -75,8 +75,8 @@
 <header>
   <div class="head-in">
     <div>
-      <h1>☕ ร้านจงชงดี สาขาเจ็ดยอด — สมุดบัญชี</h1>
-      <p>รายรับ-รายจ่าย </p>
+      <h1>☕ ร้านจงชงดี — สมุดบัญชี</h1>
+      <p>รายรับ-รายจ่าย • เงินหมุน(หนี้เจ้าของ) • กำไร</p>
     </div>
     <button id="installBtn">⬇ ติดตั้งแอป</button>
   </div>
@@ -136,7 +136,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.0.0</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.1.0</span>
   </div>
 </div>
 
@@ -208,7 +208,7 @@ async function initCloud(){
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
     localStorage.setItem(MIRROR,JSON.stringify(data));
     mode="cloud";
-    setStatus("cloud","☁ Online");
+    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
     render();
   },err=>{
     mode="local";

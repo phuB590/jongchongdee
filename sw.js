@@ -1,7 +1,7 @@
 // Service worker — จงชงดี PWA
 // network-first สำหรับไฟล์แอป (ออนไลน์=ล่าสุดเสมอ), cache-first สำหรับ Firebase SDK
 // >>> เวลาแก้แอปแล้ว deploy: เปลี่ยนเลข VERSION ให้ต่างจากเดิม 1 ครั้ง <<<
-const VERSION = "2.0.0";
+const VERSION = "2.1.0";
 const CACHE = "jcd-" + VERSION;
 const ASSETS = [
   "./",
