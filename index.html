@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ร้านจงชงดี — สมุดบัญชี</title>
+<title>บัญชีร้านจงชงดี เจ็ดยอด</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#e53935">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -35,7 +35,7 @@
   .card .label{font-size:13px;color:var(--muted);margin-bottom:6px;}
   .card .val{font-size:22px;font-weight:700;}
   .card small{font-size:11px;color:var(--muted);display:block;margin-top:4px;}
-  .val.cash{color:var(--brown);} .val.debt{color:var(--red);}
+  .val.cash{color:var(--blue);} .val.debt{color:var(--red);}
   .val.profit{color:var(--green);} .val.wd{color:var(--amber);}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .panel h2{margin:0 0 12px;font-size:16px;}
@@ -75,8 +75,8 @@
 <header>
   <div class="head-in">
     <div>
-      <h1>☕ ร้านจงชงดี — สมุดบัญชี</h1>
-      <p>รายรับ-รายจ่าย • เงินหมุน(หนี้เจ้าของ) • กำไร</p>
+      <h1>☕ บัญชีร้านจงชงดี เจ็ดยอด</h1>
+      <p>May your day be bright and cheerful.</p>
     </div>
     <button id="installBtn">⬇ ติดตั้งแอป</button>
   </div>
@@ -118,15 +118,11 @@
   </div>
 
   <div class="panel">
-    <h2>📅 สรุปรายวัน</h2>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th>วันที่</th><th class="amt">ยอดขาย</th><th class="amt">รายจ่าย</th><th class="amt">กำไร</th>
-        </tr></thead>
-        <tbody id="dailyBody"></tbody>
-      </table>
-      <div class="empty" id="dailyEmpty">ยังไม่มีข้อมูลรายวัน</div>
+    <h2>📅 สรุปวันนี้ <span id="todayLabel" style="font-weight:400;color:var(--muted);font-size:13px;"></span></h2>
+    <div class="cards" style="margin-bottom:0;">
+      <div class="card"><div class="label">ยอดขายวันนี้</div><div class="val profit" id="tSales">0</div><small>รวมรายรับของวันนี้</small></div>
+      <div class="card"><div class="label">รายจ่ายวันนี้</div><div class="val debt" id="tExpense">0</div><small>รวมรายจ่ายของวันนี้</small></div>
+      <div class="card"><div class="label">กำไรวันนี้</div><div class="val" id="tProfit">0</div><small>ยอดขาย − รายจ่าย</small></div>
     </div>
   </div>
 
@@ -149,7 +145,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.2.0</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.3.2</span>
   </div>
 </div>
 
@@ -290,27 +286,29 @@ function render(){
   }).join("");
   $("emptyMsg").style.display=data.length?"none":"block";
   $("tbody").querySelectorAll(".del").forEach(b=>b.onclick=()=>delTx(b.dataset.id));
-  renderDaily();
+  renderToday();
 }
 
-/* สรุปรายวัน: ยอดขาย(รายรับ) / รายจ่าย / กำไร(ยอดขาย−รายจ่าย) แยกตามวัน */
-function renderDaily(){
-  const map={};
+/* สรุปเฉพาะวันนี้: ยอดขาย(รายรับ) / รายจ่าย / กำไร(ยอดขาย−รายจ่าย) */
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function renderToday(){
+  const t=todayStr();
+  let s=0,e=0;
   data.forEach(x=>{
-    if(!x.date)return;
-    if(!map[x.date])map[x.date]={sales:0,expense:0};
-    if(x.type==="รายรับ")map[x.date].sales+=x.amt;
-    else if(x.type==="รายจ่าย")map[x.date].expense+=x.amt;
+    if(x.date!==t)return;
+    if(x.type==="รายรับ")s+=x.amt;
+    else if(x.type==="รายจ่าย")e+=x.amt;
   });
-  const days=Object.keys(map).sort((a,b)=>b.localeCompare(a));
-  $("dailyBody").innerHTML=days.map(d=>{
-    const s=map[d].sales,e=map[d].expense,p=s-e;
-    return `<tr><td>${d}</td>
-      <td class="amt" style="color:var(--green)">${fmt(s)}</td>
-      <td class="amt" style="color:var(--red)">${fmt(e)}</td>
-      <td class="amt" style="font-weight:700;color:${p>=0?'var(--green)':'var(--red)'}">${fmt(p)}</td></tr>`;
-  }).join("");
-  $("dailyEmpty").style.display=days.length?"none":"block";
+  const p=s-e;
+  $("tSales").textContent=fmt(s);
+  $("tExpense").textContent=fmt(e);
+  const tp=$("tProfit");
+  tp.textContent=fmt(p);
+  tp.style.color=p>=0?"var(--green)":"var(--red)";
+  $("todayLabel").textContent="("+t+")";
 }
 
 function refreshCats(){
