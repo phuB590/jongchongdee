@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ร้านจงชงดี — สมุดบัญชี</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#6f4e37">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{
+    --brown:#6f4e37; --brown2:#8a5a3b; --cream:#f7f1e8; --card:#ffffff;
+    --green:#2e7d32; --red:#c62828; --blue:#1565c0; --amber:#b26a00;
+    --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI Tahoma",Tahoma,"Leelawadee UI",sans-serif;
+    background:var(--cream);color:var(--txt);line-height:1.5;padding-bottom:env(safe-area-inset-bottom);}
+  header{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;
+    padding:16px;padding-top:calc(16px + env(safe-area-inset-top));box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .head-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  header h1{margin:0;font-size:20px;display:flex;align-items:center;gap:8px;}
+  header p{margin:4px 0 0;font-size:12px;opacity:.85;}
+  #installBtn{display:none;font:inherit;font-weight:600;border:1px solid #fff;background:rgba(255,255,255,.15);
+    color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap;}
+  #installBtn:hover{background:rgba(255,255,255,.28);}
+  #status{max-width:900px;margin:0 auto;padding:8px 16px;font-size:13px;display:flex;align-items:center;gap:8px;}
+  #status.cloud{color:var(--green);} #status.local{color:var(--amber);} #status.err{color:var(--red);}
+  .wrap{max-width:900px;margin:0 auto;padding:16px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .card .label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .card .val{font-size:22px;font-weight:700;}
+  .card small{font-size:11px;color:var(--muted);display:block;margin-top:4px;}
+  .val.cash{color:var(--brown);} .val.debt{color:var(--red);}
+  .val.profit{color:var(--green);} .val.wd{color:var(--amber);}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .panel h2{margin:0 0 12px;font-size:16px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field.full{grid-column:1/-1;}
+  label{font-size:13px;color:var(--muted);}
+  input,select{font:inherit;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fffdf9;color:var(--txt);width:100%;}
+  input:focus,select:focus{outline:2px solid var(--brown2);outline-offset:0;}
+  .btn{font:inherit;font-weight:600;border:none;border-radius:10px;padding:12px 16px;cursor:pointer;color:#fff;background:var(--brown);}
+  .btn:hover{background:var(--brown2);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn.sec{background:#fff;color:var(--brown);border:1px solid var(--brown);}
+  .btn.sec:hover{background:#f5eee2;}
+  .btn.danger{background:#fff;color:var(--red);border:1px solid var(--red);}
+  .btn.danger:hover{background:#fdecec;}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card);}
+  td.amt,th.amt{text-align:right;white-space:nowrap;}
+  .tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .t-in{background:#e6f4ea;color:var(--green);}
+  .t-out{background:#fdeaea;color:var(--red);}
+  .t-loan{background:#e7f0fb;color:var(--blue);}
+  .t-repay{background:#eee7fb;color:#6a3fb0;}
+  .t-wd{background:#fbf0e0;color:var(--amber);}
+  .del{color:var(--red);cursor:pointer;border:none;background:none;font-size:16px;padding:2px 6px;}
+  .empty{text-align:center;color:var(--muted);padding:24px;font-size:14px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:8px;}
+  .hint{font-size:12px;color:var(--muted);}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;} header h1{font-size:18px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <div>
+      <h1>☕ ร้านจงชงดี — สมุดบัญชี</h1>
+      <p>รายรับ-รายจ่าย • เงินหมุน(หนี้เจ้าของ) • กำไร</p>
+    </div>
+    <button id="installBtn">⬇ ติดตั้งแอป</button>
+  </div>
+</header>
+<div id="status" class="local">⏳ กำลังเชื่อมต่อ...</div>
+
+<div class="wrap">
+  <div class="cards">
+    <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
+    <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
+    <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
+    <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
+  </div>
+
+  <div class="panel">
+    <h2>➕ เพิ่มรายการ</h2>
+    <div class="grid">
+      <div class="field"><label>วันที่</label><input type="date" id="fDate"></div>
+      <div class="field"><label>ประเภท</label>
+        <select id="fType">
+          <option value="รายรับ">รายรับ (ขายของ)</option>
+          <option value="รายจ่าย">รายจ่าย (ซื้อวัตถุดิบ/ค่าใช้จ่าย)</option>
+          <option value="เงินยืมเจ้าของ">เงินยืมเจ้าของ (เติมทุนหมุน)</option>
+          <option value="คืนเงินเจ้าของ">คืนเงินเจ้าของ</option>
+          <option value="ถอนกำไร">ถอนกำไรไปใช้</option>
+        </select>
+      </div>
+      <div class="field"><label>หมวดหมู่</label>
+        <input list="catList" id="fCat" placeholder="เช่น ขายเครื่องดื่ม / วัตถุดิบ-กาแฟ">
+        <datalist id="catList"></datalist>
+      </div>
+      <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="fAmt" min="0" step="1" placeholder="0"></div>
+      <div class="field full"><label>รายละเอียด / หมายเหตุ</label><input type="text" id="fNote" placeholder="รายละเอียดรายการ"></div>
+    </div>
+    <div class="row-actions">
+      <button class="btn" id="addBtn">บันทึกรายการ</button>
+      <span class="hint" id="cashHint"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📒 รายการทั้งหมด</h2>
+    <div class="toolbar">
+      <button class="btn sec" id="csvBtn">⬇ Export CSV</button>
+      <button class="btn danger" id="clearBtn">ล้างข้อมูลทั้งหมด</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>วันที่</th><th>ประเภท</th><th>หมวด/รายละเอียด</th>
+          <th class="amt">จำนวน</th><th class="amt">ผลต่อเงินสด</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyMsg">ยังไม่มีรายการ — เริ่มบันทึกด้านบนได้เลย</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.0.0</span>
+  </div>
+</div>
+
+<script type="module">
+/* ============================================================
+   ⚙️ ตั้งค่า Firebase — วางค่าจาก Firebase Console ตรงนี้
+   (ถ้ายังไม่ตั้ง แอปจะทำงานแบบเก็บในเครื่องนี้เครื่องเดียวไปก่อน)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyAi6DjWxmV17qLDj6Ut6RRGsivgycycWn8",
+  authDomain: "jongchongdee-e8e50.firebaseapp.com",
+  projectId: "jongchongdee-e8e50",
+  storageBucket: "jongchongdee-e8e50.firebasestorage.app",
+  messagingSenderId: "280042409832",
+  appId: "1:280042409832:web:84a1101db415ea92edd0dd"
+};
+const COLLECTION = "ledger";  // ชื่อสมุดบัญชีร้าน (ใช้ร่วมกันทุกเครื่อง)
+/* ============================================================ */
+
+const CLOUD = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("PASTE");
+const LKEY="jcd_ledger_v1", MIRROR="jcd_cloud_mirror";
+const CATS={
+  "รายรับ":["ขายเครื่องดื่ม","ขายขนม/ของกิน","ขายสินค้าอื่น","รายรับอื่นๆ"],
+  "รายจ่าย":["วัตถุดิบ-กาแฟ/ชา","วัตถุดิบ-นม/ครีม","วัตถุดิบ-น้ำแข็ง","วัตถุดิบ-ไซรัป/ท็อปปิ้ง","แก้ว/หลอด/บรรจุภัณฑ์","แก๊ส/ไฟฟ้า/น้ำ","ค่าเช่าที่","ค่าจ้าง/แรงงาน","อุปกรณ์/ซ่อมบำรุง","การตลาด/โปรโมชัน","ค่าเดินทาง/ขนส่ง","ค่าใช้จ่ายอื่นๆ"],
+  "เงินยืมเจ้าของ":["ทุนหมุน"],"คืนเงินเจ้าของ":["คืนทุนหมุน"],"ถอนกำไร":["เงินยังชีพ"]
+};
+const POS=["รายรับ","เงินยืมเจ้าของ"];
+const fmt=n=>n.toLocaleString("th-TH",{minimumFractionDigits:0,maximumFractionDigits:2});
+const cashEffect=(t,amt)=>POS.includes(t)?amt:-amt;
+const $=id=>document.getElementById(id);
+
+let data=[];         // รายการปัจจุบัน
+let mode="local";    // "cloud" | "local"
+let fb=null;         // ตัวช่วย firestore (add/del/clear)
+
+function setStatus(kind,text){
+  const s=$("status"); s.className=kind; s.textContent=text;
+}
+
+/* ---------- โหมด LOCAL (เก็บในเครื่อง) ---------- */
+const localStore={
+  load(){try{return JSON.parse(localStorage.getItem(LKEY))||[]}catch(e){return[]}},
+  save(d){localStorage.setItem(LKEY,JSON.stringify(d));},
+  add(item){const d=localStore.load();d.push({id:"L"+Date.now(),...item});localStore.save(d);data=d;render();},
+  del(id){let d=localStore.load().filter(x=>x.id!==id);localStore.save(d);data=d;render();},
+  clear(){localStore.save([]);data=[];render();}
+};
+
+/* ---------- โหมด CLOUD (Firebase) ---------- */
+async function initCloud(){
+  const [{initializeApp},{getAuth,signInAnonymously},fs]=await Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
+  ]);
+  const app=initializeApp(firebaseConfig);
+  const db=fs.getFirestore(app);
+  try{ await fs.enableIndexedDbPersistence(db); }catch(e){/* หลายแท็บ/ไม่รองรับ */}
+  await signInAnonymously(getAuth(app));
+  const colRef=fs.collection(db,COLLECTION);
+
+  fb={
+    add:item=>fs.addDoc(colRef,{...item,createdAt:fs.serverTimestamp()}),
+    del:id=>fs.deleteDoc(fs.doc(db,COLLECTION,id)),
+    clear:async()=>{const snap=await fs.getDocs(colRef);
+      await Promise.all(snap.docs.map(d=>fs.deleteDoc(d.ref)));}
+  };
+  fs.onSnapshot(fs.query(colRef,fs.orderBy("date","desc")),snap=>{
+    data=snap.docs.map(d=>({id:d.id,...d.data()}));
+    localStorage.setItem(MIRROR,JSON.stringify(data));
+    mode="cloud";
+    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
+    render();
+  },err=>{
+    mode="local";
+    setStatus("err","⚠ เชื่อม Firestore ไม่ได้: "+(err.code||err.message));
+  });
+}
+
+/* ---------- การกระทำ (เลือกโหมดอัตโนมัติ) ---------- */
+async function addTx(){
+  const d=$("fDate").value,t=$("fType").value,cat=$("fCat").value.trim(),
+    amt=parseFloat($("fAmt").value),note=$("fNote").value.trim();
+  if(!d){alert("กรุณาเลือกวันที่");return;}
+  if(!amt||amt<=0){alert("กรุณาใส่จำนวนเงิน");return;}
+  const item={date:d,type:t,cat,amt,note};
+  $("addBtn").disabled=true;
+  try{
+    if(mode==="cloud"&&fb) await fb.add(item); else localStore.add(item);
+    $("fAmt").value="";$("fCat").value="";$("fNote").value="";$("fAmt").focus();
+  }catch(e){alert("บันทึกไม่สำเร็จ: "+e.message);}
+  $("addBtn").disabled=false;
+}
+async function delTx(id){
+  if(!confirm("ลบรายการนี้?"))return;
+  try{ if(mode==="cloud"&&fb) await fb.del(id); else localStore.del(id); }
+  catch(e){alert("ลบไม่สำเร็จ: "+e.message);}
+}
+async function clearAll(){
+  if(!confirm("ล้างข้อมูลทั้งหมด? ลบแล้วกู้คืนไม่ได้"+(mode==="cloud"?" (ลบออกจากทุกเครื่อง)":"")))return;
+  try{ if(mode==="cloud"&&fb) await fb.clear(); else localStore.clear(); }
+  catch(e){alert("ล้างไม่สำเร็จ: "+e.message);}
+}
+function exportCSV(){
+  const head=["วันที่","เดือน","ประเภท","หมวดหมู่","รายละเอียด","จำนวนเงิน","ผลต่อเงินสด"];
+  const lines=[head.join(",")];
+  [...data].sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{
+    const eff=cashEffect(x.type,x.amt);
+    lines.push([x.date,(x.date||"").slice(0,7),x.type,x.cat||"",x.note||"",x.amt,eff]
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
+  });
+  const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="จงชงดี_รายการ_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+/* ---------- แสดงผล ---------- */
+function tagClass(t){return {"รายรับ":"t-in","รายจ่าย":"t-out","เงินยืมเจ้าของ":"t-loan","คืนเงินเจ้าของ":"t-repay","ถอนกำไร":"t-wd"}[t];}
+function render(){
+  let income=0,expense=0,loan=0,repay=0,wd=0;
+  data.forEach(x=>{
+    if(x.type==="รายรับ")income+=x.amt;else if(x.type==="รายจ่าย")expense+=x.amt;
+    else if(x.type==="เงินยืมเจ้าของ")loan+=x.amt;else if(x.type==="คืนเงินเจ้าของ")repay+=x.amt;
+    else if(x.type==="ถอนกำไร")wd+=x.amt;
+  });
+  $("cCash").textContent=fmt(income+loan-expense-repay-wd);
+  $("cDebt").textContent=fmt(loan-repay);
+  $("cProfit").textContent=fmt(income-expense);
+  $("cWd").textContent=fmt(wd);
+  const rows=[...data].sort((a,b)=>(String(b.date)+String(b.id)).localeCompare(String(a.date)+String(a.id)));
+  $("tbody").innerHTML=rows.map(x=>{
+    const eff=cashEffect(x.type,x.amt),effStr=(eff>=0?"+":"−")+fmt(Math.abs(eff)),
+      detail=[x.cat,x.note].filter(Boolean).join(" • ");
+    return `<tr><td>${x.date||""}</td><td><span class="tag ${tagClass(x.type)}">${x.type}</span></td>
+      <td>${detail||"-"}</td><td class="amt">${fmt(x.amt)}</td>
+      <td class="amt" style="color:${eff>=0?'var(--green)':'var(--red)'}">${effStr}</td>
+      <td><button class="del" data-id="${x.id}">✕</button></td></tr>`;
+  }).join("");
+  $("emptyMsg").style.display=data.length?"none":"block";
+  $("tbody").querySelectorAll(".del").forEach(b=>b.onclick=()=>delTx(b.dataset.id));
+}
+
+function refreshCats(){
+  const t=$("fType").value;
+  $("catList").innerHTML=(CATS[t]||[]).map(c=>`<option value="${c}">`).join("");
+  const hints={"รายรับ":"➕ เพิ่มเงินสด และนับเป็นกำไร","รายจ่าย":"➖ ลดเงินสด และลดกำไร",
+    "เงินยืมเจ้าของ":"➕ เพิ่มเงินสด • เป็นหนี้ที่ต้องคืน (ไม่ใช่กำไร)","คืนเงินเจ้าของ":"➖ ลดเงินสด • ลดหนี้เจ้าของ",
+    "ถอนกำไร":"➖ ลดเงินสด • เงินยังชีพเจ้าของ"};
+  $("cashHint").textContent=hints[t]||"";
+}
+
+/* ---------- PWA: ติดตั้ง + อัปเดตอัตโนมัติ ---------- */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").style.display="inline-block";});
+$("installBtn").addEventListener("click",async()=>{
+  if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;
+  deferredPrompt=null;$("installBtn").style.display="none";
+});
+window.addEventListener("appinstalled",()=>{$("installBtn").style.display="none";});
+if("serviceWorker" in navigator){
+  const hadController=!!navigator.serviceWorker.controller; let reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(reloading||!hadController)return;reloading=true;location.reload();
+  });
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js")
+    .then(reg=>{reg.update();setInterval(()=>reg.update(),3600000);}).catch(()=>{}));
+}
+
+/* ---------- เริ่มทำงาน ---------- */
+$("fDate").valueAsDate=new Date();
+$("fType").addEventListener("change",refreshCats);
+$("addBtn").addEventListener("click",addTx);
+$("csvBtn").addEventListener("click",exportCSV);
+$("clearBtn").addEventListener("click",clearAll);
+refreshCats();
+
+if(CLOUD){
+  // แสดงข้อมูลล่าสุดจากแคชก่อน ระหว่างรอเชื่อมต่อ
+  try{data=JSON.parse(localStorage.getItem(MIRROR))||[];}catch(e){}
+  render(); setStatus("local","⏳ กำลังเชื่อมต่อออนไลน์...");
+  initCloud().catch(err=>{
+    mode="local";
+    try{data=JSON.parse(localStorage.getItem(MIRROR))||[];}catch(e){}
+    render(); setStatus("err","⚠ ออฟไลน์/เชื่อมต่อไม่ได้ — แสดงข้อมูลล่าสุดที่บันทึกไว้");
+  });
+}else{
+  data=localStore.load(); mode="local";
+  setStatus("local","📴 โหมดเก็บในเครื่องนี้ — ยังไม่ได้ตั้งค่า Firebase (ดูคู่มือเพื่อเปิดซิงก์ข้ามเครื่อง)");
+  render();
+}
+</script>
+</body>
+</html>
