@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --brown:#e53935; --brown2:#b71c1c; --cream:#f7f1e8; --card:#ffffff;
@@ -17,8 +20,10 @@
     --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:"Segoe UI Tahoma",Tahoma,"Leelawadee UI",sans-serif;
-    background:var(--cream);color:var(--txt);line-height:1.5;padding-bottom:env(safe-area-inset-bottom);}
+  body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,"Leelawadee UI",sans-serif;
+    background:var(--cream);color:var(--txt);line-height:1.6;letter-spacing:.1px;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+    padding-bottom:env(safe-area-inset-bottom);}
   header{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;
     padding:16px;padding-top:calc(16px + env(safe-area-inset-top));box-shadow:0 2px 8px rgba(0,0,0,.15);}
   .head-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;}
@@ -145,7 +150,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.3.2</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.4.0</span>
   </div>
 </div>
 
@@ -217,7 +222,7 @@ async function initCloud(){
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
     localStorage.setItem(MIRROR,JSON.stringify(data));
     mode="cloud";
-    setStatus("cloud","☁ Online");
+    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
     render();
   },err=>{
     mode="local";
