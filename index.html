@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ร้านจงชงดี — สมุดบัญชี</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#6f4e37">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{
+    --brown:#6f4e37; --brown2:#8a5a3b; --cream:#f7f1e8; --card:#ffffff;
+    --green:#2e7d32; --red:#c62828; --blue:#1565c0; --amber:#b26a00;
+    --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI Tahoma",Tahoma,"Leelawadee UI",sans-serif;
+    background:var(--cream);color:var(--txt);line-height:1.5;
+    padding-bottom:env(safe-area-inset-bottom);}
+  header{background:linear-gradient(135deg,var(--brown),var(--brown2));color:#fff;
+    padding:16px;padding-top:calc(16px + env(safe-area-inset-top));box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .head-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  header h1{margin:0;font-size:20px;display:flex;align-items:center;gap:8px;}
+  header p{margin:4px 0 0;font-size:12px;opacity:.85;}
+  #installBtn{display:none;font:inherit;font-weight:600;border:1px solid #fff;background:rgba(255,255,255,.15);
+    color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap;}
+  #installBtn:hover{background:rgba(255,255,255,.28);}
+  .wrap{max-width:900px;margin:0 auto;padding:16px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .card .label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .card .val{font-size:22px;font-weight:700;}
+  .card small{font-size:11px;color:var(--muted);display:block;margin-top:4px;}
+  .val.cash{color:var(--brown);} .val.debt{color:var(--red);}
+  .val.profit{color:var(--green);} .val.wd{color:var(--amber);}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .panel h2{margin:0 0 12px;font-size:16px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field.full{grid-column:1/-1;}
+  label{font-size:13px;color:var(--muted);}
+  input,select{font:inherit;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fffdf9;color:var(--txt);width:100%;}
+  input:focus,select:focus{outline:2px solid var(--brown2);outline-offset:0;}
+  .btn{font:inherit;font-weight:600;border:none;border-radius:10px;padding:12px 16px;cursor:pointer;color:#fff;background:var(--brown);}
+  .btn:hover{background:var(--brown2);}
+  .btn.sec{background:#fff;color:var(--brown);border:1px solid var(--brown);}
+  .btn.sec:hover{background:#f5eee2;}
+  .btn.danger{background:#fff;color:var(--red);border:1px solid var(--red);}
+  .btn.danger:hover{background:#fdecec;}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card);}
+  td.amt,th.amt{text-align:right;white-space:nowrap;}
+  .tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .t-in{background:#e6f4ea;color:var(--green);}
+  .t-out{background:#fdeaea;color:var(--red);}
+  .t-loan{background:#e7f0fb;color:var(--blue);}
+  .t-repay{background:#eee7fb;color:#6a3fb0;}
+  .t-wd{background:#fbf0e0;color:var(--amber);}
+  .del{color:var(--red);cursor:pointer;border:none;background:none;font-size:16px;padding:2px 6px;}
+  .empty{text-align:center;color:var(--muted);padding:24px;font-size:14px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:8px;}
+  .hint{font-size:12px;color:var(--muted);}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;} header h1{font-size:18px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <div>
+      <h1>☕ ร้านจงชงดี — สมุดบัญชี</h1>
+      <p>รายรับ-รายจ่าย • เงินหมุน(หนี้เจ้าของ) • กำไร — บันทึกในเครื่องอัตโนมัติ</p>
+    </div>
+    <button id="installBtn">⬇ ติดตั้งแอป</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="cards">
+    <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
+    <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
+    <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
+    <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
+  </div>
+
+  <div class="panel">
+    <h2>➕ เพิ่มรายการ</h2>
+    <div class="grid">
+      <div class="field"><label>วันที่</label><input type="date" id="fDate"></div>
+      <div class="field"><label>ประเภท</label>
+        <select id="fType">
+          <option value="รายรับ">รายรับ (ขายของ)</option>
+          <option value="รายจ่าย">รายจ่าย (ซื้อวัตถุดิบ/ค่าใช้จ่าย)</option>
+          <option value="เงินยืมเจ้าของ">เงินยืมเจ้าของ (เติมทุนหมุน)</option>
+          <option value="คืนเงินเจ้าของ">คืนเงินเจ้าของ</option>
+          <option value="ถอนกำไร">ถอนกำไรไปใช้</option>
+        </select>
+      </div>
+      <div class="field"><label>หมวดหมู่</label>
+        <input list="catList" id="fCat" placeholder="เช่น ขายเครื่องดื่ม / วัตถุดิบ-กาแฟ">
+        <datalist id="catList"></datalist>
+      </div>
+      <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="fAmt" min="0" step="1" placeholder="0"></div>
+      <div class="field full"><label>รายละเอียด / หมายเหตุ</label><input type="text" id="fNote" placeholder="รายละเอียดรายการ"></div>
+    </div>
+    <div class="row-actions">
+      <button class="btn" onclick="addTx()">บันทึกรายการ</button>
+      <span class="hint" id="cashHint"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📒 รายการทั้งหมด</h2>
+    <div class="toolbar">
+      <button class="btn sec" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn danger" onclick="clearAll()">ล้างข้อมูลทั้งหมด</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>วันที่</th><th>ประเภท</th><th>หมวด/รายละเอียด</th>
+          <th class="amt">จำนวน</th><th class="amt">ผลต่อเงินสด</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyMsg">ยังไม่มีรายการ — เริ่มบันทึกด้านบนได้เลย</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">1.0.0</span>
+  </div>
+</div>
+
+<script>
+const KEY="jcd_ledger_v1";
+const CATS={
+  "รายรับ":["ขายเครื่องดื่ม","ขายขนม/ของกิน","ขายสินค้าอื่น","รายรับอื่นๆ"],
+  "รายจ่าย":["วัตถุดิบ-กาแฟ/ชา","วัตถุดิบ-นม/ครีม","วัตถุดิบ-น้ำแข็ง","วัตถุดิบ-ไซรัป/ท็อปปิ้ง","แก้ว/หลอด/บรรจุภัณฑ์","แก๊ส/ไฟฟ้า/น้ำ","ค่าเช่าที่","ค่าจ้าง/แรงงาน","อุปกรณ์/ซ่อมบำรุง","การตลาด/โปรโมชัน","ค่าเดินทาง/ขนส่ง","ค่าใช้จ่ายอื่นๆ"],
+  "เงินยืมเจ้าของ":["ทุนหมุน"],
+  "คืนเงินเจ้าของ":["คืนทุนหมุน"],
+  "ถอนกำไร":["เงินยังชีพ"]
+};
+const POS=["รายรับ","เงินยืมเจ้าของ"];
+const fmt=n=>n.toLocaleString("th-TH",{minimumFractionDigits:0,maximumFractionDigits:2});
+let data=load();
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function cashEffect(t,amt){return POS.includes(t)?amt:-amt;}
+
+function refreshCats(){
+  const t=document.getElementById("fType").value;
+  document.getElementById("catList").innerHTML=(CATS[t]||[]).map(c=>`<option value="${c}">`).join("");
+  const hints={"รายรับ":"➕ เพิ่มเงินสด และนับเป็นกำไร","รายจ่าย":"➖ ลดเงินสด และลดกำไร",
+    "เงินยืมเจ้าของ":"➕ เพิ่มเงินสด • เป็นหนี้ที่ต้องคืน (ไม่ใช่กำไร)","คืนเงินเจ้าของ":"➖ ลดเงินสด • ลดหนี้เจ้าของ",
+    "ถอนกำไร":"➖ ลดเงินสด • เงินยังชีพเจ้าของ"};
+  document.getElementById("cashHint").textContent=hints[t]||"";
+}
+function addTx(){
+  const d=document.getElementById("fDate").value,t=document.getElementById("fType").value,
+    cat=document.getElementById("fCat").value.trim(),amt=parseFloat(document.getElementById("fAmt").value),
+    note=document.getElementById("fNote").value.trim();
+  if(!d){alert("กรุณาเลือกวันที่");return;}
+  if(!amt||amt<=0){alert("กรุณาใส่จำนวนเงิน");return;}
+  data.push({id:Date.now(),date:d,type:t,cat,amt,note});save();render();
+  document.getElementById("fAmt").value="";document.getElementById("fCat").value="";
+  document.getElementById("fNote").value="";document.getElementById("fAmt").focus();
+}
+function delTx(id){if(!confirm("ลบรายการนี้?"))return;data=data.filter(x=>x.id!==id);save();render();}
+function clearAll(){if(!confirm("ล้างข้อมูลทั้งหมด? ลบแล้วกู้คืนไม่ได้"))return;data=[];save();render();}
+function tagClass(t){return {"รายรับ":"t-in","รายจ่าย":"t-out","เงินยืมเจ้าของ":"t-loan","คืนเงินเจ้าของ":"t-repay","ถอนกำไร":"t-wd"}[t];}
+function render(){
+  let income=0,expense=0,loan=0,repay=0,wd=0;
+  data.forEach(x=>{
+    if(x.type==="รายรับ")income+=x.amt;else if(x.type==="รายจ่าย")expense+=x.amt;
+    else if(x.type==="เงินยืมเจ้าของ")loan+=x.amt;else if(x.type==="คืนเงินเจ้าของ")repay+=x.amt;
+    else if(x.type==="ถอนกำไร")wd+=x.amt;
+  });
+  document.getElementById("cCash").textContent=fmt(income+loan-expense-repay-wd);
+  document.getElementById("cDebt").textContent=fmt(loan-repay);
+  document.getElementById("cProfit").textContent=fmt(income-expense);
+  document.getElementById("cWd").textContent=fmt(wd);
+  const rows=[...data].sort((a,b)=>(b.date+String(b.id)).localeCompare(a.date+String(a.id)));
+  document.getElementById("tbody").innerHTML=rows.map(x=>{
+    const eff=cashEffect(x.type,x.amt),effStr=(eff>=0?"+":"−")+fmt(Math.abs(eff)),
+      detail=[x.cat,x.note].filter(Boolean).join(" • ");
+    return `<tr><td>${x.date}</td><td><span class="tag ${tagClass(x.type)}">${x.type}</span></td>
+      <td>${detail||"-"}</td><td class="amt">${fmt(x.amt)}</td>
+      <td class="amt" style="color:${eff>=0?'var(--green)':'var(--red)'}">${effStr}</td>
+      <td><button class="del" onclick="delTx(${x.id})">✕</button></td></tr>`;
+  }).join("");
+  document.getElementById("emptyMsg").style.display=data.length?"none":"block";
+}
+function exportCSV(){
+  const head=["วันที่","เดือน","ประเภท","หมวดหมู่","รายละเอียด","จำนวนเงิน","ผลต่อเงินสด"];
+  const lines=[head.join(",")];
+  [...data].sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{
+    const eff=cashEffect(x.type,x.amt);
+    lines.push([x.date,x.date.slice(0,7),x.type,x.cat||"",x.note||"",x.amt,eff]
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
+  });
+  const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="จงชงดี_รายการ_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+// ---- PWA ----
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById("installBtn").style.display="inline-block";
+});
+document.getElementById("installBtn").addEventListener("click",async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();await deferredPrompt.userChoice;
+  deferredPrompt=null;document.getElementById("installBtn").style.display="none";
+});
+window.addEventListener("appinstalled",()=>{document.getElementById("installBtn").style.display="none";});
+
+// อัปเดตอัตโนมัติ: เมื่อ deploy เวอร์ชันใหม่ ผู้ใช้ทุกคนจะรีโหลดเป็นตัวล่าสุดเอง
+if("serviceWorker" in navigator){
+  const hadController=!!navigator.serviceWorker.controller;
+  let reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(reloading||!hadController)return;   // ข้ามการรีโหลดตอนติดตั้งครั้งแรก
+    reloading=true;location.reload();
+  });
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").then(reg=>{
+      reg.update();
+      setInterval(()=>reg.update(),60*60*1000); // ตรวจอัปเดตทุก 1 ชม.
+    }).catch(()=>{});
+  });
+}
+
+// init
+document.getElementById("fDate").valueAsDate=new Date();
+document.getElementById("fType").addEventListener("change",refreshCats);
+refreshCats();render();
+</script>
+</body>
+</html>
