@@ -75,8 +75,8 @@
 <header>
   <div class="head-in">
     <div>
-      <h1>☕ ร้านจงชงดี — สมุดบัญชี</h1>
-      <p>รายรับ-รายจ่าย • เงินหมุน(หนี้เจ้าของ) • กำไร</p>
+      <h1>☕ ร้านจงชงดี สาขาเจ็ดยอด — สมุดบัญชี</h1>
+      <p>รายรับ-รายจ่าย</p>
     </div>
     <button id="installBtn">⬇ ติดตั้งแอป</button>
   </div>
@@ -136,7 +136,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.1.0</span>
+    ร้านจงชงดี • Version <span id="appVer">2.1.0</span>
   </div>
 </div>
 
@@ -208,7 +208,7 @@ async function initCloud(){
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
     localStorage.setItem(MIRROR,JSON.stringify(data));
     mode="cloud";
-    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
+    setStatus("cloud","☁ Online");
     render();
   },err=>{
     mode="local";
