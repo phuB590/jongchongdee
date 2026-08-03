@@ -20,7 +20,7 @@
     --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,"Leelawadee UI",sans-serif;
+  body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,"Noto Sans Thai",sans-serif;
     background:var(--cream);color:var(--txt);line-height:1.6;letter-spacing:.1px;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
     padding-bottom:env(safe-area-inset-bottom);}
@@ -222,7 +222,7 @@ async function initCloud(){
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
     localStorage.setItem(MIRROR,JSON.stringify(data));
     mode="cloud";
-    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
+    setStatus("cloud","☁ Online");
     render();
   },err=>{
     mode="local";
