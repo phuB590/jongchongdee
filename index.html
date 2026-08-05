@@ -20,7 +20,7 @@
     --line:#e6ddcf; --txt:#3a2e25; --muted:#8a7a6b;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,"Noto Sans Thai",sans-serif;
+  body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,"Leelawadee UI",sans-serif;
     background:var(--cream);color:var(--txt);line-height:1.6;letter-spacing:.1px;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
     padding-bottom:env(safe-area-inset-bottom);}
@@ -110,8 +110,8 @@
         </select>
       </div>
       <div class="field"><label>หมวดหมู่</label>
-        <input list="catList" id="fCat" placeholder="เช่น ขายเครื่องดื่ม / วัตถุดิบ-กาแฟ">
-        <datalist id="catList"></datalist>
+        <select id="fCat"></select>
+        <input id="fCatOther" placeholder="พิมพ์หมวดหมู่เอง" style="display:none;margin-top:6px;">
       </div>
       <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="fAmt" min="0" step="1" placeholder="0"></div>
       <div class="field full"><label>รายละเอียด / หมายเหตุ</label><input type="text" id="fNote" placeholder="รายละเอียดรายการ"></div>
@@ -129,6 +129,12 @@
       <div class="card"><div class="label">รายจ่ายวันนี้</div><div class="val debt" id="tExpense">0</div><small>รวมรายจ่ายของวันนี้</small></div>
       <div class="card"><div class="label">กำไรวันนี้</div><div class="val" id="tProfit">0</div><small>ยอดขาย − รายจ่าย</small></div>
     </div>
+  </div>
+
+  <div class="panel">
+    <h2>💸 รายจ่ายเดือนนี้ แยกตามหมวดหมู่ <span id="monthLabel" style="font-weight:400;color:var(--muted);font-size:13px;"></span></h2>
+    <div class="cards" id="expCatCards" style="margin-bottom:0;"></div>
+    <div class="empty" id="expCatEmpty">เดือนนี้ยังไม่มีรายจ่าย</div>
   </div>
 
   <div class="panel">
@@ -150,7 +156,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.4.0</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.0</span>
   </div>
 </div>
 
@@ -222,7 +228,7 @@ async function initCloud(){
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
     localStorage.setItem(MIRROR,JSON.stringify(data));
     mode="cloud";
-    setStatus("cloud","☁ Online");
+    setStatus("cloud","☁ ซิงก์ออนไลน์ — ทุกเครื่องเห็นข้อมูลชุดเดียวกัน");
     render();
   },err=>{
     mode="local";
@@ -232,15 +238,18 @@ async function initCloud(){
 
 /* ---------- การกระทำ (เลือกโหมดอัตโนมัติ) ---------- */
 async function addTx(){
-  const d=$("fDate").value,t=$("fType").value,cat=$("fCat").value.trim(),
+  const d=$("fDate").value,t=$("fType").value,
     amt=parseFloat($("fAmt").value),note=$("fNote").value.trim();
+  let cat=$("fCat").value;
+  if(cat==="__other__") cat=$("fCatOther").value.trim();
   if(!d){alert("กรุณาเลือกวันที่");return;}
   if(!amt||amt<=0){alert("กรุณาใส่จำนวนเงิน");return;}
   const item={date:d,type:t,cat,amt,note};
   $("addBtn").disabled=true;
   try{
     if(mode==="cloud"&&fb) await fb.add(item); else localStore.add(item);
-    $("fAmt").value="";$("fCat").value="";$("fNote").value="";$("fAmt").focus();
+    $("fAmt").value="";$("fNote").value="";$("fCatOther").value="";
+    $("fCat").selectedIndex=0;onCatChange();$("fAmt").focus();
   }catch(e){alert("บันทึกไม่สำเร็จ: "+e.message);}
   $("addBtn").disabled=false;
 }
@@ -292,6 +301,33 @@ function render(){
   $("emptyMsg").style.display=data.length?"none":"block";
   $("tbody").querySelectorAll(".del").forEach(b=>b.onclick=()=>delTx(b.dataset.id));
   renderToday();
+  renderExpenseByCat();
+}
+
+/* รายจ่ายเดือนนี้ แยกตามหมวดหมู่ (การ์ด) */
+function monthStr(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function renderExpenseByCat(){
+  const m=monthStr();
+  const map={}; let total=0;
+  data.forEach(x=>{
+    if(x.type!=="รายจ่าย")return;
+    if(!x.date||x.date.slice(0,7)!==m)return;
+    const c=(x.cat&&x.cat.trim())||"ไม่ระบุหมวด";
+    map[c]=(map[c]||0)+x.amt; total+=x.amt;
+  });
+  const cats=Object.keys(map).sort((a,b)=>map[b]-map[a]);
+  $("expCatCards").innerHTML=cats.map(c=>{
+    const amt=map[c],pct=total?Math.round(amt/total*100):0;
+    return `<div class="card"><div class="label">${c}</div>
+      <div class="val debt">${fmt(amt)}</div>
+      <small>${pct}% ของรายจ่ายเดือนนี้</small></div>`;
+  }).join("");
+  $("monthLabel").textContent="("+m+" • รวม "+fmt(total)+" บาท)";
+  $("expCatCards").style.display=cats.length?"grid":"none";
+  $("expCatEmpty").style.display=cats.length?"none":"block";
 }
 
 /* สรุปเฉพาะวันนี้: ยอดขาย(รายรับ) / รายจ่าย / กำไร(ยอดขาย−รายจ่าย) */
@@ -318,11 +354,19 @@ function renderToday(){
 
 function refreshCats(){
   const t=$("fType").value;
-  $("catList").innerHTML=(CATS[t]||[]).map(c=>`<option value="${c}">`).join("");
+  const opts=(CATS[t]||[]);
+  $("fCat").innerHTML=opts.map(c=>`<option value="${c}">${c}</option>`).join("")
+    +`<option value="__other__">✏️ อื่นๆ (พิมพ์เอง)</option>`;
+  onCatChange();
   const hints={"รายรับ":"➕ เพิ่มเงินสด และนับเป็นกำไร","รายจ่าย":"➖ ลดเงินสด และลดกำไร",
     "เงินยืมเจ้าของ":"➕ เพิ่มเงินสด • เป็นหนี้ที่ต้องคืน (ไม่ใช่กำไร)","คืนเงินเจ้าของ":"➖ ลดเงินสด • ลดหนี้เจ้าของ",
     "ถอนกำไร":"➖ ลดเงินสด • เงินยังชีพเจ้าของ"};
   $("cashHint").textContent=hints[t]||"";
+}
+function onCatChange(){
+  const other=$("fCat").value==="__other__";
+  $("fCatOther").style.display=other?"block":"none";
+  if(!other)$("fCatOther").value="";
 }
 
 /* ---------- PWA: ติดตั้ง + อัปเดตอัตโนมัติ ---------- */
@@ -345,6 +389,7 @@ if("serviceWorker" in navigator){
 /* ---------- เริ่มทำงาน ---------- */
 $("fDate").valueAsDate=new Date();
 $("fType").addEventListener("change",refreshCats);
+$("fCat").addEventListener("change",onCatChange);
 $("addBtn").addEventListener("click",addTx);
 $("csvBtn").addEventListener("click",exportCSV);
 $("clearBtn").addEventListener("click",clearAll);
