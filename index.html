@@ -93,7 +93,7 @@
     <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
     <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
     <div class="card"><div class="label">รายรับทั้งหมด</div><div class="val profit" id="cIncome">0</div><small>ยอดขายรวมทั้งหมด</small></div>
-    <div class="card"><div class="label">รายจ่ายทั้งหมด</div><div class="val debt" id="cExpense">0</div><small>ค่าใช้จ่ายรวมทั้งหมด</small></div>
+    <div class="card"><div class="label">รายจ่ายเดือนนี้</div><div class="val debt" id="cExpense">0</div><small id="expMonthLabel">เดือนนี้</small></div>
     <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
     <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
   </div>
@@ -158,7 +158,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.2</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.3</span>
   </div>
 </div>
 
@@ -186,6 +186,7 @@ const CATS={
   "เงินยืมเจ้าของ":["ทุนหมุน"],"คืนเงินเจ้าของ":["คืนทุนหมุน"],"ถอนกำไร":["เงินยังชีพ"]
 };
 const POS=["รายรับ","เงินยืมเจ้าของ"];
+const THMONTHS=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 const fmt=n=>n.toLocaleString("th-TH",{minimumFractionDigits:0,maximumFractionDigits:2});
 const cashEffect=(t,amt)=>POS.includes(t)?amt:-amt;
 const $=id=>document.getElementById(id);
@@ -290,7 +291,11 @@ function render(){
   $("cCash").textContent=fmt(income+loan-expense-repay-wd);
   $("cDebt").textContent=fmt(loan-repay);
   $("cIncome").textContent=fmt(income);
-  $("cExpense").textContent=fmt(expense);
+  const em=monthStr();
+  let monthExpense=0;
+  data.forEach(x=>{ if(x.type==="รายจ่าย"&&x.date&&x.date.slice(0,7)===em) monthExpense+=x.amt; });
+  $("cExpense").textContent=fmt(monthExpense);
+  $("expMonthLabel").textContent="เดือน "+thaiMonth(em);
   $("cProfit").textContent=fmt(income-expense);
   $("cWd").textContent=fmt(wd);
   const rows=[...data].sort((a,b)=>(String(b.date)+String(b.id)).localeCompare(String(a.date)+String(a.id)));
@@ -335,6 +340,7 @@ function monthStr(){
   const d=new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 }
+function thaiMonth(m){const p=m.split("-");return THMONTHS[parseInt(p[1],10)-1]+" "+p[0];}
 function renderExpenseByCat(){
   const m=monthStr();
   const map={}; let total=0;
