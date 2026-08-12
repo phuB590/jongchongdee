@@ -92,9 +92,8 @@
   <div class="cards">
     <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
     <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
-    <div class="card"><div class="label">กำไรคงเหลือ (ยังไม่ถอน)</div><div class="val profit" id="cRemain">0</div><small>กำไรที่ยังอยู่ในร้าน</small></div>
-    <div class="card"><div class="label">ถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>กำไรที่เจ้าของถอนไปใช้</small></div>
-    <div class="card"><div class="label">รวมกำไรสุทธิ</div><div class="val profit" id="cProfit">0</div><small>= คงเหลือ + ถอนไปใช้</small></div>
+    <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
+    <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
   </div>
 
   <div class="panel">
@@ -157,7 +156,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.7.1</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.0</span>
   </div>
 </div>
 
@@ -288,13 +287,8 @@ function render(){
   });
   $("cCash").textContent=fmt(income+loan-expense-repay-wd);
   $("cDebt").textContent=fmt(loan-repay);
-  const netProfit=income-expense;
-  $("cProfit").textContent=fmt(netProfit);
+  $("cProfit").textContent=fmt(income-expense);
   $("cWd").textContent=fmt(wd);
-  const remain=netProfit-wd;
-  const cr=$("cRemain");
-  cr.textContent=fmt(remain);
-  cr.style.color=remain>=0?"var(--green)":"var(--red)";
   const rows=[...data].sort((a,b)=>(String(b.date)+String(b.id)).localeCompare(String(a.date)+String(a.id)));
   $("tbody").innerHTML=rows.map(x=>{
     const eff=cashEffect(x.type,x.amt),effStr=(eff>=0?"+":"−")+fmt(Math.abs(eff)),
@@ -308,6 +302,28 @@ function render(){
   $("tbody").querySelectorAll(".del").forEach(b=>b.onclick=()=>delTx(b.dataset.id));
   renderToday();
   renderExpenseByCat();
+}
+
+/* สรุปเฉพาะวันนี้: ยอดขาย(รายรับ) / รายจ่าย / กำไร */
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function renderToday(){
+  const t=todayStr();
+  let s=0,e=0;
+  data.forEach(x=>{
+    if(x.date!==t)return;
+    if(x.type==="รายรับ")s+=x.amt;
+    else if(x.type==="รายจ่าย")e+=x.amt;
+  });
+  const p=s-e;
+  $("tSales").textContent=fmt(s);
+  $("tExpense").textContent=fmt(e);
+  const tp=$("tProfit");
+  tp.textContent=fmt(p);
+  tp.style.color=p>=0?"var(--green)":"var(--red)";
+  $("todayLabel").textContent="("+t+")";
 }
 
 /* รายจ่ายเดือนนี้ แยกตามหมวดหมู่ (การ์ด) */
@@ -334,28 +350,6 @@ function renderExpenseByCat(){
   $("monthLabel").textContent="("+m+" • รวม "+fmt(total)+" บาท)";
   $("expCatCards").style.display=cats.length?"grid":"none";
   $("expCatEmpty").style.display=cats.length?"none":"block";
-}
-
-/* สรุปเฉพาะวันนี้: ยอดขาย(รายรับ) / รายจ่าย / กำไร(ยอดขาย−รายจ่าย) */
-function todayStr(){
-  const d=new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-}
-function renderToday(){
-  const t=todayStr();
-  let s=0,e=0;
-  data.forEach(x=>{
-    if(x.date!==t)return;
-    if(x.type==="รายรับ")s+=x.amt;
-    else if(x.type==="รายจ่าย")e+=x.amt;
-  });
-  const p=s-e;
-  $("tSales").textContent=fmt(s);
-  $("tExpense").textContent=fmt(e);
-  const tp=$("tProfit");
-  tp.textContent=fmt(p);
-  tp.style.color=p>=0?"var(--green)":"var(--red)";
-  $("todayLabel").textContent="("+t+")";
 }
 
 function refreshCats(){
