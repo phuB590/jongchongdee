@@ -93,6 +93,7 @@
     <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
     <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
     <div class="card"><div class="label">รายรับทั้งหมด</div><div class="val profit" id="cIncome">0</div><small>ยอดขายรวมทั้งหมด</small></div>
+    <div class="card"><div class="label">รายจ่ายทั้งหมด</div><div class="val debt" id="cExpense">0</div><small>ค่าใช้จ่ายรวมทั้งหมด</small></div>
     <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
     <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
   </div>
@@ -157,7 +158,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.1</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.2</span>
   </div>
 </div>
 
@@ -289,6 +290,7 @@ function render(){
   $("cCash").textContent=fmt(income+loan-expense-repay-wd);
   $("cDebt").textContent=fmt(loan-repay);
   $("cIncome").textContent=fmt(income);
+  $("cExpense").textContent=fmt(expense);
   $("cProfit").textContent=fmt(income-expense);
   $("cWd").textContent=fmt(wd);
   const rows=[...data].sort((a,b)=>(String(b.date)+String(b.id)).localeCompare(String(a.date)+String(a.id)));
