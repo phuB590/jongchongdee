@@ -36,6 +36,7 @@
   #status.cloud{color:var(--green);} #status.local{color:var(--amber);} #status.err{color:var(--red);}
   .wrap{max-width:900px;margin:0 auto;padding:16px;}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .secttl{font-size:14px;font-weight:700;color:var(--txt);margin:6px 2px 8px;display:flex;align-items:center;gap:6px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .card .label{font-size:13px;color:var(--muted);margin-bottom:6px;}
   .card .val{font-size:22px;font-weight:700;}
@@ -98,13 +99,19 @@
 <div id="status" class="local">⏳ กำลังเชื่อมต่อ...</div>
 
 <div class="wrap">
+  <div class="secttl">📦 ภาพรวมสะสม (ทั้งหมด)</div>
   <div class="cards">
     <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
     <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
-    <div class="card"><div class="label">รายรับเดือนนี้</div><div class="val profit" id="cIncome">0</div><small id="incMonthLabel">เดือนนี้</small></div>
-    <div class="card"><div class="label">รายจ่ายเดือนนี้</div><div class="val debt" id="cExpense">0</div><small id="expMonthLabel">เดือนนี้</small></div>
     <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย (สะสมทั้งหมด)</small></div>
-    <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
+    <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ (สะสม)</small></div>
+  </div>
+
+  <div class="secttl">📅 เดือนนี้ <span id="secMonthLabel" style="font-weight:400;color:var(--muted);font-size:13px;"></span></div>
+  <div class="cards">
+    <div class="card"><div class="label">รายรับเดือนนี้</div><div class="val profit" id="cIncome">0</div><small>ยอดขายเดือนนี้</small></div>
+    <div class="card"><div class="label">รายจ่ายเดือนนี้</div><div class="val debt" id="cExpense">0</div><small>ค่าใช้จ่ายเดือนนี้</small></div>
+    <div class="card"><div class="label">กำไรเดือนนี้</div><div class="val" id="cProfitM">0</div><small>รายรับ − รายจ่าย เดือนนี้</small></div>
   </div>
 
   <div class="panel">
@@ -177,7 +184,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.7.0</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.8.0</span>
   </div>
 </div>
 
@@ -314,9 +321,10 @@ function render(){
   let monthIncome=0,monthExpense=0;
   data.forEach(x=>{ if(x.date&&x.date.slice(0,7)===em){ if(x.type==="รายรับ")monthIncome+=x.amt; else if(x.type==="รายจ่าย")monthExpense+=x.amt; } });
   $("cIncome").textContent=fmt(monthIncome);
-  $("incMonthLabel").textContent="เดือน "+thaiMonth(em);
   $("cExpense").textContent=fmt(monthExpense);
-  $("expMonthLabel").textContent="เดือน "+thaiMonth(em);
+  const mp=monthIncome-monthExpense;
+  const cpm=$("cProfitM"); cpm.textContent=fmt(mp); cpm.style.color=mp>=0?"var(--green)":"var(--red)";
+  $("secMonthLabel").textContent="("+thaiMonth(em)+")";
   $("cProfit").textContent=fmt(income-expense);
   $("cWd").textContent=fmt(wd);
   const rows=[...data].sort((a,b)=>(String(b.date)+String(b.id)).localeCompare(String(a.date)+String(a.id)));
