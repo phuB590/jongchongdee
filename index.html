@@ -73,6 +73,15 @@
   .empty{text-align:center;color:var(--muted);padding:24px;font-size:14px;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:8px;}
   .hint{font-size:12px;color:var(--muted);}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;}
+  .chart{display:flex;gap:14px;align-items:flex-end;overflow-x:auto;padding:6px 2px 0;}
+  .chart .col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;}
+  .chart .bars{display:flex;gap:4px;align-items:flex-end;height:150px;}
+  .chart .bar{width:16px;border-radius:4px 4px 0 0;min-height:2px;}
+  .chart .bar.inc{background:var(--green);}
+  .chart .bar.exp{background:var(--red);}
+  .chart .mlabel{font-size:11px;color:var(--muted);white-space:nowrap;}
   @media(max-width:560px){.grid{grid-template-columns:1fr;} header h1{font-size:18px;}}
 </style>
 </head>
@@ -92,9 +101,9 @@
   <div class="cards">
     <div class="card"><div class="label">เงินสดในร้าน</div><div class="val cash" id="cCash">0</div><small>เงินที่มีอยู่จริงในร้านตอนนี้</small></div>
     <div class="card"><div class="label">คงค้างเจ้าของ (ต้องคืน)</div><div class="val debt" id="cDebt">0</div><small>เงินหมุนที่ยืมมา ยังไม่คืน</small></div>
-    <div class="card"><div class="label">รายรับทั้งหมด</div><div class="val profit" id="cIncome">0</div><small>ยอดขายรวมทั้งหมด</small></div>
+    <div class="card"><div class="label">รายรับเดือนนี้</div><div class="val profit" id="cIncome">0</div><small id="incMonthLabel">เดือนนี้</small></div>
     <div class="card"><div class="label">รายจ่ายเดือนนี้</div><div class="val debt" id="cExpense">0</div><small id="expMonthLabel">เดือนนี้</small></div>
-    <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย</small></div>
+    <div class="card"><div class="label">กำไรจากการขาย</div><div class="val profit" id="cProfit">0</div><small>รายรับ − รายจ่าย (สะสมทั้งหมด)</small></div>
     <div class="card"><div class="label">กำไรถอนไปใช้แล้ว</div><div class="val wd" id="cWd">0</div><small>เงินยังชีพเจ้าของ</small></div>
   </div>
 
@@ -140,6 +149,16 @@
   </div>
 
   <div class="panel">
+    <h2>📊 รายรับ-รายจ่าย รายเดือน</h2>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green)"></span>รายรับ</span>
+      <span><span class="dot" style="background:var(--red)"></span>รายจ่าย</span>
+    </div>
+    <div class="chart" id="chart"></div>
+    <div class="empty" id="chartEmpty">ยังไม่มีข้อมูลสำหรับกราฟ</div>
+  </div>
+
+  <div class="panel">
     <h2>📒 รายการทั้งหมด</h2>
     <div class="toolbar">
       <button class="btn sec" id="csvBtn">⬇ Export CSV</button>
@@ -158,7 +177,7 @@
   </div>
 
   <div style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0 20px;">
-    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.6.3</span>
+    ร้านจงชงดี • เวอร์ชัน <span id="appVer">2.7.0</span>
   </div>
 </div>
 
@@ -187,6 +206,7 @@ const CATS={
 };
 const POS=["รายรับ","เงินยืมเจ้าของ"];
 const THMONTHS=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+const THMONTHS_SHORT=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 const fmt=n=>n.toLocaleString("th-TH",{minimumFractionDigits:0,maximumFractionDigits:2});
 const cashEffect=(t,amt)=>POS.includes(t)?amt:-amt;
 const $=id=>document.getElementById(id);
@@ -290,10 +310,11 @@ function render(){
   });
   $("cCash").textContent=fmt(income+loan-expense-repay-wd);
   $("cDebt").textContent=fmt(loan-repay);
-  $("cIncome").textContent=fmt(income);
   const em=monthStr();
-  let monthExpense=0;
-  data.forEach(x=>{ if(x.type==="รายจ่าย"&&x.date&&x.date.slice(0,7)===em) monthExpense+=x.amt; });
+  let monthIncome=0,monthExpense=0;
+  data.forEach(x=>{ if(x.date&&x.date.slice(0,7)===em){ if(x.type==="รายรับ")monthIncome+=x.amt; else if(x.type==="รายจ่าย")monthExpense+=x.amt; } });
+  $("cIncome").textContent=fmt(monthIncome);
+  $("incMonthLabel").textContent="เดือน "+thaiMonth(em);
   $("cExpense").textContent=fmt(monthExpense);
   $("expMonthLabel").textContent="เดือน "+thaiMonth(em);
   $("cProfit").textContent=fmt(income-expense);
@@ -311,6 +332,7 @@ function render(){
   $("tbody").querySelectorAll(".del").forEach(b=>b.onclick=()=>delTx(b.dataset.id));
   renderToday();
   renderExpenseByCat();
+  renderChart();
 }
 
 /* สรุปเฉพาะวันนี้: ยอดขาย(รายรับ) / รายจ่าย / กำไร */
@@ -360,6 +382,37 @@ function renderExpenseByCat(){
   $("monthLabel").textContent="("+m+" • รวม "+fmt(total)+" บาท)";
   $("expCatCards").style.display=cats.length?"grid":"none";
   $("expCatEmpty").style.display=cats.length?"none":"block";
+}
+
+/* กราฟรายรับ-รายจ่ายรายเดือน (แท่งคู่ 12 เดือนล่าสุด) */
+function renderChart(){
+  const map={};
+  data.forEach(x=>{
+    if(!x.date)return;
+    if(x.type!=="รายรับ"&&x.type!=="รายจ่าย")return;
+    const mo=x.date.slice(0,7);
+    if(!map[mo])map[mo]={inc:0,exp:0};
+    if(x.type==="รายรับ")map[mo].inc+=x.amt; else map[mo].exp+=x.amt;
+  });
+  const months=Object.keys(map).sort().slice(-12);
+  if(!months.length){$("chart").innerHTML="";$("chartEmpty").style.display="block";return;}
+  $("chartEmpty").style.display="none";
+  const max=Math.max(1,...months.map(m=>Math.max(map[m].inc,map[m].exp)));
+  const H=150;
+  $("chart").innerHTML=months.map(m=>{
+    const inc=map[m].inc,exp=map[m].exp;
+    const ih=inc>0?Math.max(2,Math.round(inc/max*H)):0;
+    const eh=exp>0?Math.max(2,Math.round(exp/max*H)):0;
+    const p=m.split("-");
+    const lbl=THMONTHS_SHORT[parseInt(p[1],10)-1]+" "+p[0].slice(2);
+    return `<div class="col">
+      <div class="bars">
+        <div class="bar inc" style="height:${ih}px" title="รายรับ ${fmt(inc)}"></div>
+        <div class="bar exp" style="height:${eh}px" title="รายจ่าย ${fmt(exp)}"></div>
+      </div>
+      <div class="mlabel">${lbl}</div>
+    </div>`;
+  }).join("");
 }
 
 function refreshCats(){
